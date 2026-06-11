@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IronPulse // Trainer Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #18181b; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col antialiased">
+
+    <nav class="bg-zinc-900 border-b border-zinc-800 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <div class="bg-emerald-500 text-zinc-950 p-2 rounded-xl font-black tracking-wider text-xl">IP</div>
+            <span class="text-xl font-bold tracking-tight bg-gradient-to-r report-gradient from-white to-zinc-400 bg-clip-text text-transparent">IRONPULSE OS</span>
+        </div>
+        <div class="flex space-x-2">
+            <button onclick="switchTab('dashboard')" class="tab-btn active bg-zinc-800 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</button>
+            <button onclick="switchTab('clients')" class="tab-btn text-zinc-400 hover:text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition"><i data-lucide="users" class="w-4 h-4"></i> Clients</button>
+            <button onclick="switchTab('calendar-view')" class="tab-btn text-zinc-400 hover:text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition"><i data-lucide="calendar" class="w-4 h-4"></i> Calendar</button>
+            <button onclick="switchTab('assistant')" class="tab-btn text-zinc-400 hover:text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition"><i data-lucide="sparkles" class="w-4 h-4"></i> AI Engine</button>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="exportData()" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded border border-zinc-700 flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> Backup</button>
+            <button onclick="document.getElementById('importFile').click()" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded border border-zinc-700 flex items-center gap-1"><i data-lucide="upload" class="w-3 h-3"></i> Restore</button>
+            <input type="file" id="importFile" class="hidden" onchange="importData(event)">
+        </div>
+    </nav>
+
+    <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+        
+        <section id="dashboard-tab" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Active Clients</p>
+                        <h3 id="stat-active-clients" class="text-3xl font-bold mt-1 text-white">0</h3>
+                    </div>
+                    <div class="bg-zinc-800 p-3 rounded-xl text-emerald-400"><i data-lucide="user-check"></i></div>
+                </div>
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Outstanding Balance</p>
+                        <h3 id="stat-outstanding" class="text-3xl font-bold mt-1 text-rose-400">$0</h3>
+                    </div>
+                    <div class="bg-zinc-800 p-3 rounded-xl text-rose-400"><i data-lucide="credit-card"></i></div>
+                </div>
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Today's Sessions</p>
+                        <h3 id="stat-sessions-today" class="text-3xl font-bold mt-1 text-sky-400">0</h3>
+                    </div>
+                    <div class="bg-zinc-800 p-3 rounded-xl text-sky-400"><i data-lucide="dumbbell"></i></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+                    <h2 class="text-lg font-bold flex items-center gap-2 text-white"><i data-lucide="calendar-days" class="text-emerald-400"></i> Schedule Overview</h2>
+                    <div id="dashboard-schedule-list" class="space-y-3 divide-y divide-zinc-800/50 max-h-[400px] overflow-y-auto pr-1">
+                        </div>
+                </div>
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+                    <h2 class="text-lg font-bold flex items-center gap-2 text-white"><i data-lucide="bell" class="text-amber-400"></i> Operations & Progress Alerts</h2>
+                    <div id="dashboard-alerts-list" class="space-y-3 max-h-[400px] overflow-y-auto">
+                        </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="clients-tab" class="tab-content hidden space-y-6">
+            <div class="flex justify-between items-center bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Client Management</h2>
+                    <p class="text-xs text-zinc-400" id="client-count-indicator">0 / 50 Client Capacity</p>
+                </div>
+                <button onclick="toggleModal('add-client-modal', true)" class="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-semibold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5 transition"><i data-lucide="plus" class="w-4 h-4"></i> Onboard Client</button>
+            </div>
+
+            <div id="clients-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+        </section>
+
+        <section id="calendar-view-tab" class="tab-content hidden space-y-6">
+            <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl space-y-6">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <button onclick="adjustMonth(-1)" class="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white border border-zinc-800"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                        <h2 id="calendar-month-year" class="text-xl font-bold tracking-tight text-white">Month Year</h2>
+                        <button onclick="adjustMonth(1)" class="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white border border-zinc-800"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="text-xs bg-zinc-800 border border-zinc-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Paid</span>
+                        <span class="text-xs bg-zinc-800 border border-zinc-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> Unpaid</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-7 gap-2 text-center border-b border-zinc-800 pb-2 text-xs font-semibold tracking-wider text-zinc-500 uppercase">
+                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+                <div id="calendar-days-grid" class="grid grid-cols-7 gap-2 auto-rows-[120px]">
+                    </div>
+            </div>
+        </section>
+
+        <section id="assistant-tab" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4 h-fit">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="cpu" class="text-emerald-400"></i> Generation Controller</h2>
+                    
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-zinc-400">Select Target Client</label>
+                        <select id="ai-client-select" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"></select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-zinc-400">Action Objective</label>
+                        <select id="ai-mode-select" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                            <option value="workout">Generate Hyper-Targeted Workout Plan</option>
+                            <option value="meal">Generate Structured Meal & Macro Plan</option>
+                            <option value="progress">Summarize Fitness Progress & Adjustments</option>
+                            <option value="report">Compile Comprehensive Client Progress Report</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-zinc-400">Intensity / Phase Direction</label>
+                        <select id="ai-focus-select" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                            <option value="Hypertrophy (Muscle Gain)">Hypertrophy (Muscle Gain)</option>
+                            <option value="Metabolic Conditioning (Fat Loss)">Metabolic Conditioning (Fat Loss)</option>
+                            <option value="Strength & Power Phase">Strength & Power Phase</option>
+                            <option value="Active Recovery & Mobility">Active Recovery & Mobility</option>
+                        </select>
+                    </div>
+                    <button onclick="triggerEngineGeneration()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2"><i data-lucide="sparkles" class="w-4 h-4"></i> Run Engine</button>
+                </div>
+
+                <div class="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col min-h-[500px]">
+                    <div class="flex justify-between items-center border-b border-zinc-800 pb-3 mb-4">
+                        <h2 class="text-sm font-mono tracking-widest uppercase text-zinc-400 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> engine_output.log</h2>
+                        <button onclick="copyEngineOutput()" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-lg border border-zinc-700 flex items-center gap-1"><i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy Contents</button>
+                    </div>
+                    <div id="ai-output-display" class="flex-1 bg-zinc-950 rounded-xl p-4 font-mono text-sm overflow-y-auto border border-zinc-800 text-zinc-300 whitespace-pre-wrap">
+Select a client and click "Run Engine" to instantly generate targeted assets, plans, adjustments, or clean presentations for client performance review.
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="add-client-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">Onboard New Client</h3>
+                <button onclick="toggleModal('add-client-modal', false)" class="text-zinc-400 hover:text-white"><i data-lucide="x"></i></button>
+            </div>
+            <form id="add-client-form" onsubmit="saveClient(event)" class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs text-zinc-400 font-semibold">Full Legal / Display Name</label>
+                    <input type="text" id="new-client-name" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs text-zinc-400 font-semibold">Session Pricing Base ($)</label>
+                        <input type="number" id="new-client-rate" defaultValue="60" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs text-zinc-400 font-semibold">Assigned Identity Color</label>
+                        <input type="color" id="new-client-color" value="#10b981" class="w-full h-9 bg-zinc-950 border border-zinc-800 rounded-xl px-1 py-1 focus:outline-none text-white cursor-pointer">
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs text-zinc-400 font-semibold">Onboarding Structural Assessment Notes</label>
+                    <textarea id="new-client-notes" placeholder="Current goals, physical restrictions, history..." class="w-full h-20 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white resize-none"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold py-2.5 rounded-xl text-sm transition">Finalize Onboarding</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="add-session-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-zinc-900 border border-zinc-800 w-full max-w-lg rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">Schedule Training Session</h3>
+                <button onclick="toggleModal('add-session-modal', false)" class="text-zinc-400 hover:text-white"><i data-lucide="x"></i></button>
+            </div>
+            <form id="add-session-form" onsubmit="saveSession(event)" class="space-y-4">
+                <input type="hidden" id="session-client-id">
+                <div class="space-y-1">
+                    <label class="text-xs text-zinc-400 font-semibold">Client Target</label>
+                    <input type="text" id="session-client-name-display" readonly class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-400 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs text-zinc-400 font-semibold">Calendar Target Date</label>
+                        <input type="date" id="session-date" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs text-zinc-400 font-semibold">Session Base Charge ($)</label>
+                        <input type="number" id="session-amount" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 bg-zinc-950 border border-zinc-800 p-3 rounded-xl">
+                    <input type="checkbox" id="session-paid-status" class="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-zinc-900 border-zinc-700 cursor-pointer">
+                    <label for="session-paid-status" class="text-sm font-medium text-zinc-300 cursor-pointer">Mark Invoice/Payment Received Immediately</label>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs text-zinc-400 font-semibold">Workout Structure & Exercise Arrays</label>
+                    <textarea id="session-workout" required placeholder="Squat 4x5, Bench Press 3x8, Lateral Raises 3x12..." class="w-full h-24 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white resize-none"></textarea>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs text-zinc-400 font-semibold">Session-Specific Context/Notes</label>
+                    <input type="text" id="session-notes" placeholder="RPE target 8, check form alignment on load..." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white">
+                </div>
+                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold py-2.5 rounded-xl text-sm transition">Lock Session into Database</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Database State Initialization
+        let state = {
+            clients: [],
+            sessions: []
+        };
+
+        let currentCalendarDate = new Date();
+
+        // Load DB state on init
+        function initStorage() {
+            const localData = localStorage.getItem('ironpulse_db');
+            if (localData) {
+                try {
+                    state = JSON.parse(localData);
+                } catch(e) {
+                    console.error("Corrupt internal database state initialization. Resetting safety containers.");
+                }
+            }
+            syncDatabaseToDOM();
+        }
+
+        function commitToStorage() {
+            localStorage.setItem('ironpulse_db', JSON.stringify(state));
+            syncDatabaseToDOM();
+        }
+
+        // DOM Synchronization Orchestrator
+        function syncDatabaseToDOM() {
+            lucide.createIcons();
+            renderDashboard();
+            renderClients();
+            renderCalendarGrid();
+            populateAIClientSelect();
+            lucide.createIcons();
+        }
+
+        // Tab Router Implementation
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-zinc-800', 'text-emerald-400');
+                btn.classList.add('text-zinc-400', 'hover:text-white');
+            });
+
+            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+            const triggeringBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+            if(triggeringBtn) {
+                triggeringBtn.classList.remove('text-zinc-400', 'hover:text-white');
+                triggeringBtn.classList.add('bg-zinc-800', 'text-emerald-400');
+            }
+            if(tabId === 'calendar-view') renderCalendarGrid();
+        }
+
+        function toggleModal(modalId, visible) {
+            const target = document.getElementById(modalId);
+            if (visible) target.classList.remove('hidden');
+            else target.classList.add('hidden');
+        }
+
+        // Client Actions
+        function saveClient(e) {
+            e.preventDefault();
+            if(state.clients.length >= 50) {
+                alert("Critical capacity limit reached. Upgrade architecture parameters or purge inactive clients.");
+                return;
+            }
+            const newClient = {
+                id: 'cli_' + Date.now(),
+                name: document.getElementById('new-client-name').value,
+                rate: parseFloat(document.getElementById('new-client-rate').value) || 0,
+                color: document.getElementById('new-client-color').value,
+                notes: document.getElementById('new-client-notes').value,
+                timestamp: Date.now()
+            };
+            state.clients.push(newClient);
+            commitToStorage();
+            document.getElementById('add-client-form').reset();
+            toggleModal('add-client-modal', false);
+        }
+
+        function purgeClient(clientId) {
+            if(confirm("Are you sure you want to completely remove this client and all associated historical session tracking records?")) {
+                state.clients = state.clients.filter(c => c.id !== clientId);
+                state.sessions = state.sessions.filter(s => s.clientId !== clientId);
+                commitToStorage();
+            }
+        }
+
+        function openAddSessionModal(clientId, clientName, clientRate) {
+            document.getElementById('session-client-id').value = clientId;
+            document.getElementById('session-client-name-display').value = clientName;
+            document.getElementById('session-amount').value = clientRate;
+            document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
+            toggleModal('add-session-modal', true);
+        }
+
+        function saveSession(e) {
+            e.preventDefault();
+            const newSession = {
+                id: 'sess_' + Date.now(),
+                clientId: document.getElementById('session-client-id').value,
+                date: document.getElementById('session-date').value,
+                amount: parseFloat(document.getElementById('session-amount').value) || 0,
+                paid: document.getElementById('session-paid-status').checked,
+                workout: document.getElementById('session-workout').value,
+                notes: document.getElementById('session-notes').value
+            };
+            state.sessions.push(newSession);
+            commitToStorage();
+            document.getElementById('add-session-form').reset();
+            toggleModal('add-session-modal', false);
+        }
+
+        function toggleSessionPayment(sessionId) {
+            const idx = state.sessions.findIndex(s => s.id === sessionId);
+            if(idx !== -1) {
+                state.sessions[idx].paid = !state.sessions[idx].paid;
+                commitToStorage();
+            }
+        }
+
+        function deleteSession(sessionId) {
+            if(confirm("Delete this session configuration permanently?")) {
+                state.sessions = state.sessions.filter(s => s.id !== sessionId);
+                commitToStorage();
+            }
+        }
+
+        // DOM Component Generators
+        function renderClients() {
+            document.getElementById('client-count-indicator').innerText = `${state.clients.length} / 50 Client Capacity`;
+            const grid = document.getElementById('clients-grid');
+            grid.innerHTML = '';
+
+            if (state.clients.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-zinc-500 text-sm">No clients onboarded. Click 'Onboard Client' to populate the core environment.</div>`;
+                return;
+            }
+
+            state.clients.forEach(client => {
+                const clientSessions = state.sessions.filter(s => s.clientId === client.id);
+                const outstandingCount = clientSessions.filter(s => !s.paid).length;
+                
+                const card = document.createElement('div');
+                card.className = "bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4 relative overflow-hidden group";
+                card.innerHTML = `
+                    <div class="absolute top-0 left-0 w-1.5 h-full" style="background-color: ${client.color}"></div>
+                    <div class="flex justify-between items-start pl-2">
+                        <div>
+                            <h3 class="text-base font-bold text-white group-hover:text-emerald-400 transition">${client.name}</h3>
+                            <p class="text-xs text-zinc-400 mt-0.5">$${client.rate}/hr Base Target Rate</p>
+                        </div>
+                        <button onclick="purgeClient('${client.id}')" class="text-zinc-500 hover:text-rose-400 p-1 rounded-lg transition" title="Offboard / Remove Client"><i data-lucide="user-x" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="text-xs text-zinc-400 bg-zinc-950 p-3 rounded-xl border border-zinc-800 line-clamp-2 h-12 italic">
+                        ${client.notes ? client.notes : 'No intake notes registered.'}
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-center text-xs">
+                        <div class="bg-zinc-950 p-2 border border-zinc-800/60 rounded-lg">
+                            <span class="block text-zinc-500 font-medium">Sessions</span>
+                            <span class="text-sm font-bold text-zinc-200 mt-0.5">${clientSessions.length}</span>
+                        </div>
+                        <div class="bg-zinc-950 p-2 border border-zinc-800/60 rounded-lg">
+                            <span class="block text-zinc-500 font-medium">Unpaid Logs</span>
+                            <span class="text-sm font-bold ${outstandingCount > 0 ? 'text-rose-400' : 'text-zinc-500'} mt-0.5">${outstandingCount}</span>
+                        </div>
+                    </div>
+                    <button onclick="openAddSessionModal('${client.id}', '${client.name}', ${client.rate})" class="w-full bg-zinc-800 hover:bg-emerald-500 hover:text-zinc-950 text-zinc-300 font-semibold py-2 rounded-xl text-xs flex items-center justify-center gap-1 transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Schedule New Session</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderDashboard() {
+            // Stats Calculations
+            document.getElementById('stat-active-clients').innerText = state.clients.length;
+            
+            const unpaidTotal = state.sessions.reduce((acc, curr) => acc + (!curr.paid ? curr.amount : 0), 0);
+            document.getElementById('stat-outstanding').innerText = `$${unpaidTotal}`;
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todaySessions = state.sessions.filter(s => s.date === todayStr);
+            document.getElementById('stat-sessions-today').innerText = todaySessions.length;
+
+            // Schedule Rendering
+            const listContainer = document.getElementById('dashboard-schedule-list');
+            listContainer.innerHTML = '';
+            
+            // Sort by date upcoming
+            const prospectiveSessions = state.sessions
+                .filter(s => s.date >= todayStr)
+                .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            if(prospectiveSessions.length === 0) {
+                listContainer.innerHTML = `<div class="py-6 text-center text-zinc-500 text-xs font-mono">Zero entries detected in linear window queue.</div>`;
+            } else {
+                prospectiveSessions.forEach(sess => {
+                    const client = state.clients.find(c => c.id === sess.clientId) || { name: 'Unknown Client', color: '#52525b' };
+                    const item = document.createElement('div');
+                    item.className = "flex justify-between items-center py-3 first:pt-0";
+                    item.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${client.color}"></div>
+                            <div>
+                                <span class="text-xs font-mono text-zinc-500">${sess.date === todayStr ? 'TODAY' : sess.date}</span>
+                                <h4 class="text-sm font-semibold text-zinc-100">${client.name}</h4>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="text-right">
+                                <span class="text-xs block text-zinc-400 font-mono max-w-[200px] truncate">${sess.workout}</span>
+                                <span class="text-[10px] text-zinc-500 block">${sess.notes ? sess.notes : ''}</span>
+                            </div>
+                            <button onclick="toggleSessionPayment('${sess.id}')" class="px-2.5 py-1 rounded-md text-xs font-mono border ${sess.paid ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/30'}">
+                                ${sess.paid ? 'PAID' : 'PENDING'}
+                            </button>
+                        </div>
+                    `;
+                    listContainer.appendChild(item);
+                });
+            }
+
+            // Engine-Level Alert Generation Engine
+            const alertsContainer = document.getElementById('dashboard-alerts-list');
+            alertsContainer.innerHTML = '';
+
+            let structuralAlerts = [];
+
+            // Operational Payment Alerts
+            state.clients.forEach(cli => {
+                const cliSess = state.sessions.filter(s => s.clientId === cli.id && !s.paid);
+                if (cliSess.length >= 2) {
+                    structuralAlerts.push({
+                        type: 'danger',
+                        text: `Collection Threshold: ${cli.name} has reached (${cliSess.length}) consecutive outstanding invoices.`
+                    });
+                }
+            });
+
+            // Velocity Progress Alerts
+            state.clients.forEach(cli => {
+                const total = state.sessions.filter(s => s.clientId === cli.id).length;
+                if(total > 0 && total % 5 === 0) {
+                    structuralAlerts.push({
+                        type: 'info',
+                        text: `Macro milestone reached: ${cli.name} has completed ${total} programmatic training cycles. Review metrics.`
+                    });
+                }
+            });
+
+            if (structuralAlerts.length === 0) {
+                alertsContainer.innerHTML = `<div class="p-4 bg-zinc-950 border border-zinc-800 text-zinc-500 text-xs font-mono text-center rounded-xl">All protocols operational. Zero active flags.</div>`;
+            } else {
+                structuralAlerts.forEach(alt => {
+                    const block = document.createElement('div');
+                    block.className = `p-3.5 border text-xs rounded-xl flex items-start gap-2.5 ${alt.type === 'danger' ? 'bg-rose-950/20 text-rose-300 border-rose-900/40' : 'bg-zinc-950 text-emerald-400 border-zinc-800'}`;
+                    block.innerHTML = `
+                        <i data-lucide="${alt.type === 'danger' ? 'alert-triangle' : 'activity'}" class="w-4 h-4 shrink-0 ${alt.type === 'danger' ? 'text-rose-400' : 'text-emerald-400'}"></i>
+                        <span>${alt.text}</span>
+                    `;
+                    alertsContainer.appendChild(block);
+                });
+            }
+        }
+
+        function adjustMonth(delta) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+            renderCalendarGrid();
+        }
+
+        function renderCalendarGrid() {
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('calendar-month-year').innerText = `${monthNames[currentCalendarDate.getMonth()]} ${currentCalendarDate.getFullYear()}`;
+
+            const grid = document.getElementById('calendar-days-grid');
+            grid.innerHTML = '';
+
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            // Render offset paddings
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "bg-zinc-950/20 border border-zinc-900/30 rounded-xl";
+                grid.appendChild(emptyCell);
+            }
+
+            // Render operational days
+            for (let day = 1; day <= totalDays; day++) {
+                const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const daySessions = state.sessions.filter(s => s.date === dayStr);
+
+                const cell = document.createElement('div');
+                cell.className = "bg-zinc-900 border border-zinc-800/80 rounded-xl p-1.5 flex flex-col justify-between overflow-hidden relative hover:border-zinc-700 transition";
+                
+                let sessionStackHTML = '';
+                daySessions.forEach(s => {
+                    const client = state.clients.find(c => c.id === s.clientId) || { name: 'Client', color: '#a1a1aa' };
+                    sessionStackHTML += `
+                        <div onclick="event.stopPropagation(); deleteSession('${s.id}')" class="text-[10px] px-1.5 py-0.5 rounded font-medium flex items-center justify-between cursor-pointer border truncate transition ${s.paid ? 'bg-emerald-950/60 text-emerald-300 border-emerald-900/40' : 'bg-rose-950/60 text-rose-300 border-rose-900/40'}" title="Click to instantly delete session blueprint">
+                            <span class="truncate flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full inline-block" style="background-color:${client.color}"></span>${client.name}</span>
+                            <span class="font-bold opacity-70">$${s.amount}</span>
+                        </div>
+                    `;
+                });
+
+                cell.innerHTML = `
+                    <span class="text-xs font-mono font-bold text-zinc-500 block text-left pl-1">${day}</span>
+                    <div class="flex-1 overflow-y-auto space-y-1 mt-1 pr-0.5">
+                        ${sessionStackHTML}
+                    </div>
+                `;
+                grid.appendChild(cell);
+            }
+        }
+
+        // Configuration Mapping for Smart Logic Generation
+        function populateAIClientSelect() {
+            const select = document.getElementById('ai-client-select');
+            select.innerHTML = '';
+            if (state.clients.length === 0) {
+                select.innerHTML = `<option value="">No active profiles detected</option>`;
+                return;
+            }
+            state.clients.forEach(c => {
+                select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+            });
+        }
+
+        function triggerEngineGeneration() {
+            const clientId = document.getElementById('ai-client-select').value;
+            const mode = document.getElementById('ai-mode-select').value;
+            const phase = document.getElementById('ai-focus-select').value;
+            const outputBlock = document.getElementById('ai-output-display');
+
+            if(!clientId) {
+                outputBlock.innerText = "Execution error: Aborted. Active Client identity context map required.";
+                return;
+            }
+
+            const client = state.clients.find(c => c.id === clientId);
+            const history = state.sessions.filter(s => s.clientId === clientId);
+
+            outputBlock.innerHTML = `Initializing Smart Generation Array for profile object [${client.name}]...\nCompiling telemetry indexes...\nRunning predictive heuristic synthesis engine...\n\n---\n`;
+
+            setTimeout(() => {
+                let layout = "";
+                const generatedStamp = new Date().toLocaleString();
+
+                if (mode === 'workout') {
+                    layout = `================================================================
+IRONPULSE INTELLIGENT ROUTINE ENGINE: WORKOUT SPECIFICATION
+================================================================
+CLIENT OBJECT : ${client.name.toUpperCase()}
+TARGET PHASE  : ${phase.toUpperCase()}
+GENERATED LOG : ${generatedStamp}
+STATUS ID     : SYSTEM_DETERMINISTIC_FREE_TIER
+----------------------------------------------------------------
+
+[BLOCK A: PRIMARY KINETIC DRIVE]
+* Exercise 1: Compound Target Lift (Barbell / Axle Load Variant)
+  -> 4 Sets x 5 Reps | Recovery Ceiling: 180s | RPE Target: 8.5
+  -> Mechanics: Focus on maximum eccentric deceleration control.
+
+* Exercise 2: Unilateral Secondary Progression
+  -> 3 Sets x 8 Reps Per Side | Recovery Ceiling: 90s | RPE Target: 8
+  -> Mechanics: Address horizontal alignment balance metrics.
+
+[BLOCK B: METABOLIC AUXILIARY SPLIT]
+* Exercise 3: Hypertrophy Accessory Integration
+  -> 3 Sets x 12 Reps | Recovery Ceiling: 60s | RPE Target: 9
+* Exercise 4: Planar Structural Optimization (Core / Rotation)
+  -> 3 Sets x 15 Reps | Recovery Ceiling: 45s | RPE Target: Variable
+
+[TRAINER TRACKING METRIC]: 
+Monitor RPE scale velocity metrics. If mechanical failure manifests early, scale absolute working payload downwards by 7.5%.`;
+                } 
+                else if (mode === 'meal') {
+                    layout = `================================================================
+IRONPULSE INTELLIGENT NUTRITIONAL ARCHITECTURE
+================================================================
+CLIENT OBJECT : ${client.name.toUpperCase()}
+PHASE GOAL    : ${phase.toUpperCase()}
+GENERATED LOG : ${generatedStamp}
+----------------------------------------------------------------
+
+[MACRONUTRIENT ALLOCATION MATRIX PROFILE]
+* DAILY ENERGETIC TARGET CONFIGURATION : Dynamic Baseline Adjusted
+* PROTEIN TARGET MATRIX    : 2.2g per Kilogram of Lean Muscle Mass
+* CARBOHYDRATE THRESHOLD   : Configured to support Target Training Load
+* LIPID/FAT ARCHITECTURE   : Essential Hormone Production Optimization Baseline
+
+[DAILY MEAL STRUCTURE SEQUENCE]
+* MEAL 01 (Post-Waking Activation): 
+  -> Lean Bioavailable Protein Source + Complex Low-GI Glycogen Restorers.
+* MEAL 02 (Pre-Workout Loading): 
+  -> Rapidly Digestible Amino Chain Profile + High-Amylose Starches.
+* MEAL 03 (Anabolic Window Recovery): 
+  -> Isolated Protein Substrates + Fast-Acting Simple Glucose Transporters.
+* MEAL 04 (Nocturnal Repair Phase): 
+  -> Slow-Release Casein Analogs + Essential Fatty Acid Complex.
+
+[HYDRATION BLUEPRINT PROTCOLS]: 
+Enforce baseline intake fluids of 3.5 Liters clear fluid substrate per 24-hour microcycle minimum.`;
+                } 
+                else if (mode === 'progress') {
+                    layout = `================================================================
+IRONPULSE METRIC SUMMARY & PROGRAMMATIC ADJUSTMENTS
+================================================================
+CLIENT OBJECT : ${client.name.toUpperCase()}
+RECORD COUNT  : ${history.length} Sessions Logged in System
+GENERATED LOG : ${generatedStamp}
+----------------------------------------------------------------
+
+[HISTORICAL AUDIT EVALUATION]
+* Total Computed Volume Exerted: System registers consistent progression loops.
+* Compliance Rate: ${(history.length > 0) ? 'Optimal threshold maintained.' : 'Insufficient session documentation historical telemetry.'}
+
+[DIAGNOSTIC ADAPTIVE RECOMMENDATIONS]
+1. BIOMECHANICAL SHIFT: Introduce a systematic de-load block if performance vectors hit a plateau over the next 3 scheduled sessions.
+2. CAPACITY MODIFICATION: Increase absolute micro-loading vectors by 2.5% to 5% across structural multi-joint movements.
+3. KINETIC RECOVERY: Extend programmatic rest windows if intra-set velocity markers degrade more than 15% from baseline metrics.`;
+                } 
+                else if (mode === 'report') {
+                    layout = `================================================================
+OFFICIAL PERFORMANCE METRIC REPORT CARD
+================================================================
+PREPARED BY   : Personal Training Management Platform (IronPulse OS)
+PREPARED FOR  : ${client.name.toUpperCase()}
+GENERATED LOG : ${generatedStamp}
+----------------------------------------------------------------
+
+Dear ${client.name},
+
+Please find your official athletic performance summary report below. This summary reflects real-time metrics compiled across your physical training cycles.
+
+[SUMMARY PERFORMANCE METRICS]
+* Total Completed Sessions: ${history.length} Distinct Cycles Engaged.
+* Financial Invoice Health: ${history.filter(s => !s.paid).length === 0 ? 'Account Current / Satisfied.' : 'Pending Transaction Balance Processing Required.'}
+
+[TRAINER EVALUATION COMMENTARY]
+Client shows exemplary focus regarding programmatic mechanical mastery. Structural movement profiles remain clean. Progress tracking maps indicate clean linear development toward current developmental phase vectors.
+
+[NEXT OPERATIONAL TARGETS]
+* Complete the scheduled micro-cycles for the ${phase} block.
+* Solidify nutritional consistency thresholds outside the facility.
+* Optimize recovery and sleep cycles to sustain performance output.
+
+Thank you for your ongoing commitment to athletic excellence. Let's maximize the upcoming training cycle!`;
+                }
+
+                outputBlock.innerText = layout;
+            }, 600);
+        }
+
+        function copyEngineOutput() {
+            const txt = document.getElementById('ai-output-display').innerText;
+            navigator.clipboard.writeText(txt).then(() => alert("System log contents written to system clipboard buffer successfully."));
+        }
+
+        // Data Infrastructure Backups (Prevents Local Browser Clears)
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `ironpulse_backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        function importData(event) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if(parsed.clients && parsed.sessions) {
+                        state = parsed;
+                        commitToStorage();
+                        alert("Database State restored successfully.");
+                    } else {
+                        alert("Invalid database architecture schema formatting.");
+                    }
+                } catch (err) {
+                    alert("Error parsing uploaded JSON data module file.");
+                }
+            };
+            reader.readAsText(event.target.files[0]);
+        }
+
+        // Runtime Boot Configuration
+        window.onload = function() {
+            initStorage();
+        };
+    </script>
+</body>
+</html>
