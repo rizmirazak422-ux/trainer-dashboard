@@ -298,6 +298,66 @@
         function syncDatabaseToDOM() {
             renderDashboard();
             renderClients();
+            function renderCalendar() {
+    const grid = document.getElementById('calendar-days-grid');
+    const monthYearText = document.getElementById('calendar-month-year');
+    grid.innerHTML = '';
+
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    monthYearText.innerText = `${monthNames[month]} ${year}`;
+
+    // Get the day of the week the month starts on (0 = Sunday, 6 = Saturday)
+    const firstDay = new Date(year, month, 1).getDay();
+    // Get total days in the current month
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // 1. Add blank padding days for the start of the month
+    for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += `<div class="p-2 border border-zinc-800/30 rounded-xl bg-zinc-950/30"></div>`;
+    }
+
+    // 2. Render the actual days
+    for (let d = 1; d <= daysInMonth; d++) {
+        // Format date string to match your database (YYYY-MM-DD)
+        const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        
+        // Find sessions matching this day
+        const daySessions = state.sessions.filter(s => s.date === dateString);
+
+        let sessionsHtml = '';
+        daySessions.forEach(session => {
+            const client = state.clients.find(c => c.id === session.clientId);
+            if (client) {
+                sessionsHtml += `
+                    <div class="text-[9px] sm:text-[10px] mt-1 px-1.5 py-1 rounded bg-zinc-800 text-zinc-300 truncate border-l-2 shadow-sm" style="border-color: ${client.color}">
+                        ${session.time} - ${client.name}
+                    </div>`;
+            }
+        });
+
+        // Highlight today's date
+        const isToday = new Date().toISOString().split('T')[0] === dateString;
+        const todayClass = isToday ? 'text-emerald-400 font-black bg-emerald-500/10 w-6 h-6 flex items-center justify-center rounded-full' : 'text-zinc-400 font-semibold';
+
+        grid.innerHTML += `
+            <div class="p-1.5 sm:p-2 border border-zinc-800 rounded-xl bg-zinc-900 overflow-y-auto custom-scrollbar flex flex-col transition hover:border-zinc-600">
+                <span class="text-xs ${todayClass}">${d}</span>
+                <div class="mt-1 flex flex-col gap-1 flex-1">
+                    ${sessionsHtml}
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Function to handle the Left/Right arrows on the calendar
+function adjustMonth(offset) {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset);
+    renderCalendar();
+}
             lucide.createIcons();
         }
 
