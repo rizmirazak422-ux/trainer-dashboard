@@ -2,126 +2,184 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>IronPulse // Trainer Dashboard</title>
+    <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        
+        /* iOS Safari Optimization Overrides */
+        :root {
+            color-scheme: dark; /* Forces iOS native pickers/wheels to render in Dark Mode */
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-text-size-adjust: 100%;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Critical iOS Zoom Fix: Inputs must be at least 16px on mobile to stop auto-zoom */
+        input, textarea, select {
+            font-size: 16px !important; 
+        }
+        
+        /* Remove the ugly grey tap highlight overlay box on iOS touch */
+        button, a, select, input, [onclick] {
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Smooth, native inertia scrolling for overflow zones on iOS */
+        .overflow-y-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Custom scrollbar adjustments */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #18181b; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
     </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col antialiased">
+<!-- Used min-h-[100dvh] to perfectly fit mobile screen layouts despite Safari's dynamic browser bars -->
+<body class="bg-zinc-950 text-zinc-100 min-h-[100dvh] flex flex-col antialiased pb-safe">
 
-    <nav class="bg-zinc-900 border-b border-zinc-800 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-        <div class="flex items-center space-x-3">
-            <div class="bg-emerald-500 text-zinc-950 p-2 rounded-xl font-black tracking-wider text-xl">IP</div>
-            <span class="text-xl font-bold tracking-tight bg-gradient-to-r report-gradient from-white to-zinc-400 bg-clip-text text-transparent">IRONPULSE OS</span>
+    <!-- Top Navigation -->
+    <nav class="bg-zinc-900 border-b border-zinc-800 px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 sticky top-0 z-50">
+        <div class="flex items-center justify-between w-full sm:w-auto">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-500 text-zinc-950 p-2 rounded-xl font-black tracking-wider text-xl">IP</div>
+                <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">IRONPULSE OS</span>
+            </div>
+            <!-- Backup & Restore on upper right for tight mobile views -->
+            <div class="flex items-center space-x-1 sm:hidden">
+                <button onclick="exportData()" class="text-[11px] bg-zinc-800 text-zinc-300 px-2 py-1.5 rounded border border-zinc-700 flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i></button>
+                <button onclick="document.getElementById('importFile').click()" class="text-[11px] bg-zinc-800 text-zinc-300 px-2 py-1.5 rounded border border-zinc-700 flex items-center gap-1"><i data-lucide="upload" class="w-3 h-3"></i></button>
+            </div>
         </div>
-        <div class="flex space-x-2">
-            <button onclick="switchTab('dashboard')" class="tab-btn active bg-zinc-800 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</button>
-            <button onclick="switchTab('clients')" class="tab-btn text-zinc-400 hover:text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition"><i data-lucide="users" class="w-4 h-4"></i> Clients</button>
-            <button onclick="switchTab('calendar-view')" class="tab-btn text-zinc-400 hover:text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition"><i data-lucide="calendar" class="w-4 h-4"></i> Calendar</button>
-            <button onclick="switchTab('assistant')" class="tab-btn text-zinc-400 hover:text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition"><i data-lucide="sparkles" class="w-4 h-4"></i> AI Engine</button>
+        
+        <!-- Touch Optimized Tabs Segment Bar -->
+        <div class="flex w-full sm:w-auto bg-zinc-950 p-1 rounded-xl border border-zinc-800/80 overflow-x-auto">
+            <button onclick="switchTab('dashboard')" class="tab-btn active bg-zinc-800 text-emerald-400 flex-1 sm:flex-none text-center px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition whitespace-nowrap"><i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> Dashboard</button>
+            <button onclick="switchTab('clients')" class="tab-btn text-zinc-400 hover:text-white flex-1 sm:flex-none text-center px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition whitespace-nowrap"><i data-lucide="users" class="w-3.5 h-3.5"></i> Clients</button>
+            <button onclick="switchTab('calendar-view')" class="tab-btn text-zinc-400 hover:text-white flex-1 sm:flex-none text-center px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition whitespace-nowrap"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> Calendar</button>
+            <button onclick="switchTab('assistant')" class="tab-btn text-zinc-400 hover:text-white flex-1 sm:flex-none text-center px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition whitespace-nowrap"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> AI Engine</button>
         </div>
-        <div class="flex items-center space-x-2">
-            <button onclick="exportData()" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded border border-zinc-700 flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> Backup</button>
-            <button onclick="document.getElementById('importFile').click()" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded border border-zinc-700 flex items-center gap-1"><i data-lucide="upload" class="w-3 h-3"></i> Restore</button>
-            <input type="file" id="importFile" class="hidden" onchange="importData(event)">
+        
+        <!-- Desktop Backups Container -->
+        <div class="hidden sm:flex items-center space-x-2">
+            <button onclick="exportData()" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded border border-zinc-700 flex items-center gap-1"><i data-lucide="download" class="w-3.5 h-3.5"></i> Backup</button>
+            <button onclick="document.getElementById('importFile').click()" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded border border-zinc-700 flex items-center gap-1"><i data-lucide="upload" class="w-3.5 h-3.5"></i> Restore</button>
         </div>
+        <input type="file" id="importFile" class="hidden" onchange="importData(event)">
     </nav>
 
-    <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+    <!-- Main Workspace -->
+    <main class="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-6">
         
+        <!-- DASHBOARD TAB -->
         <section id="dashboard-tab" class="tab-content space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                <!-- Stat Cards -->
                 <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Active Clients</p>
-                        <h3 id="stat-active-clients" class="text-3xl font-bold mt-1 text-white">0</h3>
+                        <h3 id="stat-active-clients" class="text-2xl sm:text-3xl font-bold mt-1 text-white">0</h3>
                     </div>
-                    <div class="bg-zinc-800 p-3 rounded-xl text-emerald-400"><i data-lucide="user-check"></i></div>
+                    <div class="bg-zinc-800 p-2.5 rounded-xl text-emerald-400"><i data-lucide="user-check" class="w-5 h-5"></i></div>
                 </div>
                 <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Outstanding Balance</p>
-                        <h3 id="stat-outstanding" class="text-3xl font-bold mt-1 text-rose-400">$0</h3>
+                        <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Outstanding Due</p>
+                        <h3 id="stat-outstanding" class="text-2xl sm:text-3xl font-bold mt-1 text-rose-400">$0</h3>
                     </div>
-                    <div class="bg-zinc-800 p-3 rounded-xl text-rose-400"><i data-lucide="credit-card"></i></div>
+                    <div class="bg-zinc-800 p-2.5 rounded-xl text-rose-400"><i data-lucide="credit-card" class="w-5 h-5"></i></div>
                 </div>
                 <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Today's Sessions</p>
-                        <h3 id="stat-sessions-today" class="text-3xl font-bold mt-1 text-sky-400">0</h3>
+                        <h3 id="stat-sessions-today" class="text-2xl sm:text-3xl font-bold mt-1 text-sky-400">0</h3>
                     </div>
-                    <div class="bg-zinc-800 p-3 rounded-xl text-sky-400"><i data-lucide="dumbbell"></i></div>
+                    <div class="bg-zinc-800 p-2.5 rounded-xl text-sky-400"><i data-lucide="dumbbell" class="w-5 h-5"></i></div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
-                    <h2 class="text-lg font-bold flex items-center gap-2 text-white"><i data-lucide="calendar-days" class="text-emerald-400"></i> Schedule Overview</h2>
-                    <div id="dashboard-schedule-list" class="space-y-3 divide-y divide-zinc-800/50 max-h-[400px] overflow-y-auto pr-1">
-                        </div>
+                <!-- Schedule Overview -->
+                <div class="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4">
+                    <h2 class="text-base sm:text-lg font-bold flex items-center gap-2 text-white"><i data-lucide="calendar-days" class="text-emerald-400 w-5 h-5"></i> Schedule Overview</h2>
+                    <div id="dashboard-schedule-list" class="space-y-3 divide-y divide-zinc-800/50 max-h-[350px] overflow-y-auto pr-1">
+                        <!-- Dynamic -->
+                    </div>
                 </div>
-                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
-                    <h2 class="text-lg font-bold flex items-center gap-2 text-white"><i data-lucide="bell" class="text-amber-400"></i> Operations & Progress Alerts</h2>
-                    <div id="dashboard-alerts-list" class="space-y-3 max-h-[400px] overflow-y-auto">
-                        </div>
+                <!-- Action Alerts / Alerts Panel -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4">
+                    <h2 class="text-base sm:text-lg font-bold flex items-center gap-2 text-white"><i data-lucide="bell" class="text-amber-400 w-5 h-5"></i> System Alerts</h2>
+                    <div id="dashboard-alerts-list" class="space-y-3 max-h-[350px] overflow-y-auto">
+                        <!-- Dynamic -->
+                    </div>
                 </div>
             </div>
         </section>
 
+        <!-- CLIENTS TAB -->
         <section id="clients-tab" class="tab-content hidden space-y-6">
-            <div class="flex justify-between items-center bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-zinc-900 border border-zinc-800 p-4 rounded-xl gap-4">
                 <div>
-                    <h2 class="text-lg font-bold text-white">Client Management</h2>
+                    <h2 class="text-base sm:text-lg font-bold text-white">Client Management Database</h2>
                     <p class="text-xs text-zinc-400" id="client-count-indicator">0 / 50 Client Capacity</p>
                 </div>
-                <button onclick="toggleModal('add-client-modal', true)" class="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-semibold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5 transition"><i data-lucide="plus" class="w-4 h-4"></i> Onboard Client</button>
+                <button onclick="toggleModal('add-client-modal', true)" class="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-semibold px-4 py-2.5 rounded-xl text-sm flex items-center justify-center gap-1.5 transition w-full sm:w-auto"><i data-lucide="plus" class="w-4 h-4"></i> Onboard New Client</button>
             </div>
 
-            <div id="clients-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                </div>
+            <!-- Clients Grid Layout -->
+            <div id="clients-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <!-- Dynamic cards -->
+            </div>
         </section>
 
+        <!-- CALENDAR TAB -->
         <section id="calendar-view-tab" class="tab-content hidden space-y-6">
-            <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl space-y-6">
-                <div class="flex justify-between items-center">
+            <div class="bg-zinc-900 border border-zinc-800 p-4 sm:p-6 rounded-2xl space-y-6 overflow-x-auto">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 min-w-[600px]">
                     <div class="flex items-center space-x-4">
-                        <button onclick="adjustMonth(-1)" class="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white border border-zinc-800"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
-                        <h2 id="calendar-month-year" class="text-xl font-bold tracking-tight text-white">Month Year</h2>
-                        <button onclick="adjustMonth(1)" class="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white border border-zinc-800"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                        <button onclick="adjustMonth(-1)" class="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white border border-zinc-800"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <h2 id="calendar-month-year" class="text-base sm:text-xl font-bold tracking-tight text-white min-w-[140px] text-center">Month Year</h2>
+                        <button onclick="adjustMonth(1)" class="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white border border-zinc-800"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                     </div>
                     <div class="flex gap-2">
-                        <span class="text-xs bg-zinc-800 border border-zinc-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Paid</span>
-                        <span class="text-xs bg-zinc-800 border border-zinc-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> Unpaid</span>
+                        <span class="text-[11px] bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> Paid Log</span>
+                        <span class="text-[11px] bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span> Unpaid Log</span>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-7 gap-2 text-center border-b border-zinc-800 pb-2 text-xs font-semibold tracking-wider text-zinc-500 uppercase">
-                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-                </div>
-                <div id="calendar-days-grid" class="grid grid-cols-7 gap-2 auto-rows-[120px]">
+                <!-- Calendar Framework Grid (Kept readable on smaller screens via a wrapper min-width) -->
+                <div class="min-w-[600px] space-y-2">
+                    <div class="grid grid-cols-7 gap-2 text-center border-b border-zinc-800 pb-2 text-[11px] font-semibold tracking-wider text-zinc-500 uppercase">
+                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
                     </div>
+                    <div id="calendar-days-grid" class="grid grid-cols-7 gap-2 auto-rows-[100px] sm:auto-rows-[120px]">
+                        <!-- Dynamic Days -->
+                    </div>
+                </div>
             </div>
         </section>
 
+        <!-- ASSISTANT/GEN ENGINE TAB -->
         <section id="assistant-tab" class="tab-content hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4 h-fit">
-                    <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="cpu" class="text-emerald-400"></i> Generation Controller</h2>
+                <!-- Settings Panel -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 h-fit">
+                    <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2"><i data-lucide="cpu" class="text-emerald-400 w-5 h-5"></i> Generation Controller</h2>
                     
                     <div class="space-y-1">
-                        <label class="text-xs font-semibold text-zinc-400">Select Target Client</label>
-                        <select id="ai-client-select" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"></select>
+                        <label class="text-[11px] font-semibold text-zinc-400">Select Target Client</label>
+                        <select id="ai-client-select" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-zinc-200"></select>
                     </div>
                     <div class="space-y-1">
-                        <label class="text-xs font-semibold text-zinc-400">Action Objective</label>
-                        <select id="ai-mode-select" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                        <label class="text-[11px] font-semibold text-zinc-400">Action Objective</label>
+                        <select id="ai-mode-select" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-zinc-200">
                             <option value="workout">Generate Hyper-Targeted Workout Plan</option>
                             <option value="meal">Generate Structured Meal & Macro Plan</option>
                             <option value="progress">Summarize Fitness Progress & Adjustments</option>
@@ -129,101 +187,107 @@
                         </select>
                     </div>
                     <div class="space-y-1">
-                        <label class="text-xs font-semibold text-zinc-400">Intensity / Phase Direction</label>
-                        <select id="ai-focus-select" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                        <label class="text-[11px] font-semibold text-zinc-400">Intensity / Phase Direction</label>
+                        <select id="ai-focus-select" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-zinc-200">
                             <option value="Hypertrophy (Muscle Gain)">Hypertrophy (Muscle Gain)</option>
                             <option value="Metabolic Conditioning (Fat Loss)">Metabolic Conditioning (Fat Loss)</option>
                             <option value="Strength & Power Phase">Strength & Power Phase</option>
                             <option value="Active Recovery & Mobility">Active Recovery & Mobility</option>
                         </select>
                     </div>
-                    <button onclick="triggerEngineGeneration()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2"><i data-lucide="sparkles" class="w-4 h-4"></i> Run Engine</button>
+                    <button onclick="triggerEngineGeneration()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 mt-2"><i data-lucide="sparkles" class="w-4 h-4"></i> Run AI Engine</button>
                 </div>
 
-                <div class="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col min-h-[500px]">
+                <!-- Terminal Output Workspace -->
+                <div class="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 flex flex-col min-h-[450px]">
                     <div class="flex justify-between items-center border-b border-zinc-800 pb-3 mb-4">
-                        <h2 class="text-sm font-mono tracking-widest uppercase text-zinc-400 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> engine_output.log</h2>
-                        <button onclick="copyEngineOutput()" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-lg border border-zinc-700 flex items-center gap-1"><i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy Contents</button>
+                        <h2 class="text-[11px] font-mono tracking-widest uppercase text-zinc-400 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> engine_output.log</h2>
+                        <button onclick="copyEngineOutput()" class="text-xs bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg border border-zinc-700 flex items-center gap-1.5"><i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy</button>
                     </div>
-                    <div id="ai-output-display" class="flex-1 bg-zinc-950 rounded-xl p-4 font-mono text-sm overflow-y-auto border border-zinc-800 text-zinc-300 whitespace-pre-wrap">
-Select a client and click "Run Engine" to instantly generate targeted assets, plans, adjustments, or clean presentations for client performance review.
+                    <div id="ai-output-display" class="flex-1 bg-zinc-950 rounded-xl p-4 font-mono text-xs sm:text-sm overflow-y-auto border border-zinc-800 text-zinc-300 whitespace-pre-wrap">
+Select a client and click "Run AI Engine" to instantly generate targeted assets, plans, adjustments, or clean presentations for client performance review.
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
+    <!-- TOUCH & SCREEN RESPONSIVE MODAL OVERLAYS -->
+    <!-- 1. Add Client Modal -->
     <div id="add-client-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl">
+        <div class="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xl max-h-[90dvh] overflow-y-auto">
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white">Onboard New Client</h3>
-                <button onclick="toggleModal('add-client-modal', false)" class="text-zinc-400 hover:text-white"><i data-lucide="x"></i></button>
+                <h3 class="text-base sm:text-lg font-bold text-white">Onboard New Client</h3>
+                <button onclick="toggleModal('add-client-modal', false)" class="text-zinc-400 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <form id="add-client-form" onsubmit="saveClient(event)" class="space-y-4">
                 <div class="space-y-1">
-                    <label class="text-xs text-zinc-400 font-semibold">Full Legal / Display Name</label>
-                    <input type="text" id="new-client-name" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white">
+                    <label class="text-[11px] text-zinc-400 font-semibold">Full Profile / Display Name</label>
+                    <input type="text" id="new-client-name" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1">
-                        <label class="text-xs text-zinc-400 font-semibold">Session Pricing Base ($)</label>
-                        <input type="number" id="new-client-rate" defaultValue="60" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white">
+                        <label class="text-[11px] text-zinc-400 font-semibold">Base Session Rate ($)</label>
+                        <input type="number" id="new-client-rate" value="60" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
                     </div>
                     <div class="space-y-1">
-                        <label class="text-xs text-zinc-400 font-semibold">Assigned Identity Color</label>
-                        <input type="color" id="new-client-color" value="#10b981" class="w-full h-9 bg-zinc-950 border border-zinc-800 rounded-xl px-1 py-1 focus:outline-none text-white cursor-pointer">
+                        <label class="text-[11px] text-zinc-400 font-semibold">Identity Color Hex</label>
+                        <input type="color" id="new-client-color" value="#10b981" class="w-full h-[44px] bg-zinc-950 border border-zinc-800 rounded-xl px-1 py-1 focus:outline-none text-white cursor-pointer">
                     </div>
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs text-zinc-400 font-semibold">Onboarding Structural Assessment Notes</label>
-                    <textarea id="new-client-notes" placeholder="Current goals, physical restrictions, history..." class="w-full h-20 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white resize-none"></textarea>
+                    <label class="text-[11px] text-zinc-400 font-semibold">Onboarding Structural Assessment Notes</label>
+                    <textarea id="new-client-notes" placeholder="Current fitness goals, physical restrictions, metrics..." class="w-full h-24 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white resize-none"></textarea>
                 </div>
-                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold py-2.5 rounded-xl text-sm transition">Finalize Onboarding</button>
+                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold py-3 rounded-xl text-sm transition mt-2">Finalize Onboarding</button>
             </form>
         </div>
     </div>
 
+    <!-- 2. Add Calendar Session Modal -->
     <div id="add-session-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-zinc-900 border border-zinc-800 w-full max-w-lg rounded-2xl p-6 space-y-4 shadow-2xl">
+        <div class="bg-zinc-900 border border-zinc-800 w-full max-w-lg rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xl max-h-[90dvh] overflow-y-auto">
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white">Schedule Training Session</h3>
-                <button onclick="toggleModal('add-session-modal', false)" class="text-zinc-400 hover:text-white"><i data-lucide="x"></i></button>
+                <h3 class="text-base sm:text-lg font-bold text-white">Schedule Training Session</h3>
+                <button onclick="toggleModal('add-session-modal', false)" class="text-zinc-400 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <form id="add-session-form" onsubmit="saveSession(event)" class="space-y-4">
                 <input type="hidden" id="session-client-id">
                 <div class="space-y-1">
-                    <label class="text-xs text-zinc-400 font-semibold">Client Target</label>
-                    <input type="text" id="session-client-name-display" readonly class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-400 outline-none">
+                    <label class="text-[11px] text-zinc-400 font-semibold">Selected Client Context</label>
+                    <input type="text" id="session-client-name-display" readonly class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-zinc-400 outline-none">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="space-y-1">
-                        <label class="text-xs text-zinc-400 font-semibold">Calendar Target Date</label>
-                        <input type="date" id="session-date" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white">
+                        <label class="text-[11px] text-zinc-400 font-semibold">Calendar Target Date</label>
+                        <!-- Native calendar slider opens in dark mode due to color-scheme rule -->
+                        <input type="date" id="session-date" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
                     </div>
                     <div class="space-y-1">
-                        <label class="text-xs text-zinc-400 font-semibold">Session Base Charge ($)</label>
-                        <input type="number" id="session-amount" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white">
+                        <label class="text-[11px] text-zinc-400 font-semibold">Session Base Billable ($)</label>
+                        <input type="number" id="session-amount" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
                     </div>
                 </div>
-                <div class="flex items-center space-x-2 bg-zinc-950 border border-zinc-800 p-3 rounded-xl">
-                    <input type="checkbox" id="session-paid-status" class="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-zinc-900 border-zinc-700 cursor-pointer">
-                    <label for="session-paid-status" class="text-sm font-medium text-zinc-300 cursor-pointer">Mark Invoice/Payment Received Immediately</label>
+                <div class="flex items-center space-x-3 bg-zinc-950 border border-zinc-800 p-3.5 rounded-xl">
+                    <input type="checkbox" id="session-paid-status" class="w-5 h-5 rounded text-emerald-500 focus:ring-emerald-500 bg-zinc-900 border-zinc-700 cursor-pointer shrink-0">
+                    <label for="session-paid-status" class="text-sm font-medium text-zinc-300 cursor-pointer select-none">Mark Invoice/Payment Received Immediately</label>
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs text-zinc-400 font-semibold">Workout Structure & Exercise Arrays</label>
-                    <textarea id="session-workout" required placeholder="Squat 4x5, Bench Press 3x8, Lateral Raises 3x12..." class="w-full h-24 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white resize-none"></textarea>
+                    <label class="text-[11px] text-zinc-400 font-semibold">Workout Structure & Exercise Arrays</label>
+                    <textarea id="session-workout" required placeholder="Squat 4x5, Bench Press 3x8, Lateral Raises 3x12..." class="w-full h-24 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white resize-none"></textarea>
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs text-zinc-400 font-semibold">Session-Specific Context/Notes</label>
-                    <input type="text" id="session-notes" placeholder="RPE target 8, check form alignment on load..." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white">
+                    <label class="text-[11px] text-zinc-400 font-semibold">Session Notes / Reminders</label>
+                    <input type="text" id="session-notes" placeholder="Focus on eccentric tempo alignment..." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
                 </div>
-                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold py-2.5 rounded-xl text-sm transition">Lock Session into Database</button>
+                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold py-3 rounded-xl text-sm transition mt-2">Lock Session into Database</button>
             </form>
         </div>
     </div>
 
+    <!-- MAIN CORE RUNTIME CORE ARCHITECTURE -->
     <script>
-        // Database State Initialization
+        // Internal State Storage Engine
         let state = {
             clients: [],
             sessions: []
@@ -231,14 +295,13 @@ Select a client and click "Run Engine" to instantly generate targeted assets, pl
 
         let currentCalendarDate = new Date();
 
-        // Load DB state on init
         function initStorage() {
             const localData = localStorage.getItem('ironpulse_db');
             if (localData) {
                 try {
                     state = JSON.parse(localData);
                 } catch(e) {
-                    console.error("Corrupt internal database state initialization. Resetting safety containers.");
+                    console.error("Corrupt internal database state initialization. Safe resetting containers.");
                 }
             }
             syncDatabaseToDOM();
@@ -249,9 +312,7 @@ Select a client and click "Run Engine" to instantly generate targeted assets, pl
             syncDatabaseToDOM();
         }
 
-        // DOM Synchronization Orchestrator
         function syncDatabaseToDOM() {
-            lucide.createIcons();
             renderDashboard();
             renderClients();
             renderCalendarGrid();
@@ -259,7 +320,6 @@ Select a client and click "Run Engine" to instantly generate targeted assets, pl
             lucide.createIcons();
         }
 
-        // Tab Router Implementation
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -274,19 +334,22 @@ Select a client and click "Run Engine" to instantly generate targeted assets, pl
                 triggeringBtn.classList.add('bg-zinc-800', 'text-emerald-400');
             }
             if(tabId === 'calendar-view') renderCalendarGrid();
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // Smooth scrolls to top on iOS tab selection switches
         }
 
         function toggleModal(modalId, visible) {
             const target = document.getElementById(modalId);
-            if (visible) target.classList.remove('hidden');
-            else target.classList.add('hidden');
+            if (visible) {
+                target.classList.remove('hidden');
+            } else {
+                target.classList.add('hidden');
+            }
         }
 
-        // Client Actions
         function saveClient(e) {
             e.preventDefault();
             if(state.clients.length >= 50) {
-                alert("Critical capacity limit reached. Upgrade architecture parameters or purge inactive clients.");
+                alert("Critical Capacity reached. Please purge inactive records.");
                 return;
             }
             const newClient = {
@@ -304,7 +367,7 @@ Select a client and click "Run Engine" to instantly generate targeted assets, pl
         }
 
         function purgeClient(clientId) {
-            if(confirm("Are you sure you want to completely remove this client and all associated historical session tracking records?")) {
+            if(confirm("Completely remove this client and all associated historical calendar tracking records?")) {
                 state.clients = state.clients.filter(c => c.id !== clientId);
                 state.sessions = state.sessions.filter(s => s.clientId !== clientId);
                 commitToStorage();
@@ -345,20 +408,19 @@ Select a client and click "Run Engine" to instantly generate targeted assets, pl
         }
 
         function deleteSession(sessionId) {
-            if(confirm("Delete this session configuration permanently?")) {
+            if(confirm("Delete this scheduled session configuration?")) {
                 state.sessions = state.sessions.filter(s => s.id !== sessionId);
                 commitToStorage();
             }
         }
 
-        // DOM Component Generators
         function renderClients() {
-            document.getElementById('client-count-indicator').innerText = `${state.clients.length} / 50 Client Capacity`;
+            document.getElementById('client-count-indicator').innerText = `${state.clients.length} / 50 Active Subscriptions`;
             const grid = document.getElementById('clients-grid');
             grid.innerHTML = '';
 
             if (state.clients.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-12 text-center text-zinc-500 text-sm">No clients onboarded. Click 'Onboard Client' to populate the core environment.</div>`;
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-zinc-500 text-sm font-mono">No active configurations built. Onboard a client to begin.</div>`;
                 return;
             }
 
@@ -367,39 +429,37 @@ Select a client and click "Run Engine" to instantly generate targeted assets, pl
                 const outstandingCount = clientSessions.filter(s => !s.paid).length;
                 
                 const card = document.createElement('div');
-                card.className = "bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4 relative overflow-hidden group";
+                card.className = "bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4 relative overflow-hidden";
                 card.innerHTML = `
                     <div class="absolute top-0 left-0 w-1.5 h-full" style="background-color: ${client.color}"></div>
                     <div class="flex justify-between items-start pl-2">
                         <div>
-                            <h3 class="text-base font-bold text-white group-hover:text-emerald-400 transition">${client.name}</h3>
+                            <h3 class="text-base font-bold text-white">${client.name}</h3>
                             <p class="text-xs text-zinc-400 mt-0.5">$${client.rate}/hr Base Target Rate</p>
                         </div>
-                        <button onclick="purgeClient('${client.id}')" class="text-zinc-500 hover:text-rose-400 p-1 rounded-lg transition" title="Offboard / Remove Client"><i data-lucide="user-x" class="w-4 h-4"></i></button>
+                        <button onclick="purgeClient('${client.id}')" class="text-zinc-500 hover:text-rose-400 p-2 rounded-lg transition" title="Offboard Client"><i data-lucide="user-x" class="w-4 h-4"></i></button>
                     </div>
                     <div class="text-xs text-zinc-400 bg-zinc-950 p-3 rounded-xl border border-zinc-800 line-clamp-2 h-12 italic">
-                        ${client.notes ? client.notes : 'No intake notes registered.'}
+                        ${client.notes ? client.notes : 'No structural intake notes loaded.'}
                     </div>
                     <div class="grid grid-cols-2 gap-2 text-center text-xs">
                         <div class="bg-zinc-950 p-2 border border-zinc-800/60 rounded-lg">
-                            <span class="block text-zinc-500 font-medium">Sessions</span>
+                            <span class="block text-zinc-500 font-medium">Cycles</span>
                             <span class="text-sm font-bold text-zinc-200 mt-0.5">${clientSessions.length}</span>
                         </div>
                         <div class="bg-zinc-950 p-2 border border-zinc-800/60 rounded-lg">
-                            <span class="block text-zinc-500 font-medium">Unpaid Logs</span>
+                            <span class="block text-zinc-500 font-medium">Unpaid</span>
                             <span class="text-sm font-bold ${outstandingCount > 0 ? 'text-rose-400' : 'text-zinc-500'} mt-0.5">${outstandingCount}</span>
                         </div>
                     </div>
-                    <button onclick="openAddSessionModal('${client.id}', '${client.name}', ${client.rate})" class="w-full bg-zinc-800 hover:bg-emerald-500 hover:text-zinc-950 text-zinc-300 font-semibold py-2 rounded-xl text-xs flex items-center justify-center gap-1 transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Schedule New Session</button>
+                    <button onclick="openAddSessionModal('${client.id}', '${client.name}', ${client.rate})" class="w-full bg-zinc-800 text-zinc-300 font-semibold py-3 rounded-xl text-xs flex items-center justify-center gap-1.5 active:bg-emerald-500 active:text-zinc-950 transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Session Blueprint</button>
                 `;
                 grid.appendChild(card);
             });
         }
 
         function renderDashboard() {
-            // Stats Calculations
             document.getElementById('stat-active-clients').innerText = state.clients.length;
-            
             const unpaidTotal = state.sessions.reduce((acc, curr) => acc + (!curr.paid ? curr.amount : 0), 0);
             document.getElementById('stat-outstanding').innerText = `$${unpaidTotal}`;
 
@@ -407,37 +467,34 @@ Select a client and click "Run Engine" to instantly generate targeted assets, pl
             const todaySessions = state.sessions.filter(s => s.date === todayStr);
             document.getElementById('stat-sessions-today').innerText = todaySessions.length;
 
-            // Schedule Rendering
             const listContainer = document.getElementById('dashboard-schedule-list');
             listContainer.innerHTML = '';
             
-            // Sort by date upcoming
             const prospectiveSessions = state.sessions
                 .filter(s => s.date >= todayStr)
                 .sort((a,b) => new Date(a.date) - new Date(b.date));
 
             if(prospectiveSessions.length === 0) {
-                listContainer.innerHTML = `<div class="py-6 text-center text-zinc-500 text-xs font-mono">Zero entries detected in linear window queue.</div>`;
+                listContainer.innerHTML = `<div class="py-8 text-center text-zinc-500 text-xs font-mono">Zero upcoming sessions logged in system.</div>`;
             } else {
                 prospectiveSessions.forEach(sess => {
-                    const client = state.clients.find(c => c.id === sess.clientId) || { name: 'Unknown Client', color: '#52525b' };
+                    const client = state.clients.find(c => c.id === sess.clientId) || { name: 'Profile Removed', color: '#52525b' };
                     const item = document.createElement('div');
-                    item.className = "flex justify-between items-center py-3 first:pt-0";
+                    item.className = "flex justify-between items-center py-3.5 first:pt-0 gap-2";
                     item.innerHTML = `
-                        <div class="flex items-center space-x-3">
-                            <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${client.color}"></div>
-                            <div>
-                                <span class="text-xs font-mono text-zinc-500">${sess.date === todayStr ? 'TODAY' : sess.date}</span>
-                                <h4 class="text-sm font-semibold text-zinc-100">${client.name}</h4>
+                        <div class="flex items-center space-x-2.5 min-w-0">
+                            <div class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${client.color}"></div>
+                            <div class="min-w-0">
+                                <span class="text-[10px] font-mono text-zinc-500 block">${sess.date === todayStr ? 'TODAY' : sess.date}</span>
+                                <h4 class="text-sm font-semibold text-zinc-100 truncate">${client.name}</h4>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-4">
-                            <div class="text-right">
-                                <span class="text-xs block text-zinc-400 font-mono max-w-[200px] truncate">${sess.workout}</span>
-                                <span class="text-[10px] text-zinc-500 block">${sess.notes ? sess.notes : ''}</span>
+                        <div class="flex items-center space-x-3 text-right shrink-0">
+                            <div class="hidden sm:block max-w-[180px]">
+                                <span class="text-xs block text-zinc-400 font-mono truncate">${sess.workout}</span>
                             </div>
-                            <button onclick="toggleSessionPayment('${sess.id}')" class="px-2.5 py-1 rounded-md text-xs font-mono border ${sess.paid ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/30'}">
-                                ${sess.paid ? 'PAID' : 'PENDING'}
+                            <button onclick="toggleSessionPayment('${sess.id}')" class="px-2.5 py-1.5 rounded-md text-[11px] font-mono border ${sess.paid ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}">
+                                ${sess.paid ? 'PAID' : 'DUE'}
                             </button>
                         </div>
                     `;
@@ -445,40 +502,36 @@ Select a client and click "Run Engine" to instantly generate targeted assets, pl
                 });
             }
 
-            // Engine-Level Alert Generation Engine
             const alertsContainer = document.getElementById('dashboard-alerts-list');
             alertsContainer.innerHTML = '';
-
             let structuralAlerts = [];
 
-            // Operational Payment Alerts
             state.clients.forEach(cli => {
                 const cliSess = state.sessions.filter(s => s.clientId === cli.id && !s.paid);
                 if (cliSess.length >= 2) {
                     structuralAlerts.push({
                         type: 'danger',
-                        text: `Collection Threshold: ${cli.name} has reached (${cliSess.length}) consecutive outstanding invoices.`
+                        text: `Collections: ${cli.name} has reached (${cliSess.length}) outstanding un-invoiced sessions.`
                     });
                 }
             });
 
-            // Velocity Progress Alerts
             state.clients.forEach(cli => {
                 const total = state.sessions.filter(s => s.clientId === cli.id).length;
                 if(total > 0 && total % 5 === 0) {
                     structuralAlerts.push({
                         type: 'info',
-                        text: `Macro milestone reached: ${cli.name} has completed ${total} programmatic training cycles. Review metrics.`
+                        text: `Milestone: ${cli.name} completed ${total} athletic load cycles. Run performance report.`
                     });
                 }
             });
 
             if (structuralAlerts.length === 0) {
-                alertsContainer.innerHTML = `<div class="p-4 bg-zinc-950 border border-zinc-800 text-zinc-500 text-xs font-mono text-center rounded-xl">All protocols operational. Zero active flags.</div>`;
+                alertsContainer.innerHTML = `<div class="p-4 bg-zinc-950 border border-zinc-800 text-zinc-500 text-xs font-mono text-center rounded-xl">All systems clean. Zero exceptions flags.</div>`;
             } else {
                 structuralAlerts.forEach(alt => {
                     const block = document.createElement('div');
-                    block.className = `p-3.5 border text-xs rounded-xl flex items-start gap-2.5 ${alt.type === 'danger' ? 'bg-rose-950/20 text-rose-300 border-rose-900/40' : 'bg-zinc-950 text-emerald-400 border-zinc-800'}`;
+                    block.className = `p-3 border text-xs rounded-xl flex items-start gap-2 ${alt.type === 'danger' ? 'bg-rose-950/20 text-rose-300 border-rose-900/30' : 'bg-zinc-950 text-emerald-400 border-zinc-800'}`;
                     block.innerHTML = `
                         <i data-lucide="${alt.type === 'danger' ? 'alert-triangle' : 'activity'}" class="w-4 h-4 shrink-0 ${alt.type === 'danger' ? 'text-rose-400' : 'text-emerald-400'}"></i>
                         <span>${alt.text}</span>
@@ -506,35 +559,32 @@ Select a client and click "Run Engine" to instantly generate targeted assets, pl
             const firstDayIndex = new Date(year, month, 1).getDay();
             const totalDays = new Date(year, month + 1, 0).getDate();
 
-            // Render offset paddings
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
-                emptyCell.className = "bg-zinc-950/20 border border-zinc-900/30 rounded-xl";
+                emptyCell.className = "bg-zinc-950/20 border border-zinc-900/10 rounded-xl";
                 grid.appendChild(emptyCell);
             }
 
-            // Render operational days
             for (let day = 1; day <= totalDays; day++) {
                 const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const daySessions = state.sessions.filter(s => s.date === dayStr);
 
                 const cell = document.createElement('div');
-                cell.className = "bg-zinc-900 border border-zinc-800/80 rounded-xl p-1.5 flex flex-col justify-between overflow-hidden relative hover:border-zinc-700 transition";
+                cell.className = "bg-zinc-900 border border-zinc-800 rounded-xl p-1 flex flex-col justify-between overflow-hidden relative";
                 
                 let sessionStackHTML = '';
                 daySessions.forEach(s => {
                     const client = state.clients.find(c => c.id === s.clientId) || { name: 'Client', color: '#a1a1aa' };
                     sessionStackHTML += `
-                        <div onclick="event.stopPropagation(); deleteSession('${s.id}')" class="text-[10px] px-1.5 py-0.5 rounded font-medium flex items-center justify-between cursor-pointer border truncate transition ${s.paid ? 'bg-emerald-950/60 text-emerald-300 border-emerald-900/40' : 'bg-rose-950/60 text-rose-300 border-rose-900/40'}" title="Click to instantly delete session blueprint">
-                            <span class="truncate flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full inline-block" style="background-color:${client.color}"></span>${client.name}</span>
-                            <span class="font-bold opacity-70">$${s.amount}</span>
+                        <div onclick="event.stopPropagation(); deleteSession('${s.id}')" class="text-[9px] px-1 py-0.5 rounded font-medium flex items-center justify-between border truncate ${s.paid ? 'bg-emerald-950/60 text-emerald-300 border-emerald-900/30' : 'bg-rose-950/60 text-rose-300 border-rose-900/30'}" title="Tap to remove">
+                            <span class="truncate flex items-center gap-0.5"><span class="w-1 h-1 rounded-full inline-block shrink-0" style="background-color:${client.color}"></span>${client.name}</span>
                         </div>
                     `;
                 });
 
                 cell.innerHTML = `
-                    <span class="text-xs font-mono font-bold text-zinc-500 block text-left pl-1">${day}</span>
-                    <div class="flex-1 overflow-y-auto space-y-1 mt-1 pr-0.5">
+                    <span class="text-[10px] font-mono font-bold text-zinc-500 block text-left pl-1">${day}</span>
+                    <div class="flex-1 overflow-y-auto space-y-0.5 mt-0.5 pr-0.5">
                         ${sessionStackHTML}
                     </div>
                 `;
@@ -542,12 +592,11 @@ Select a client and click "Run Engine" to instantly generate targeted assets, pl
             }
         }
 
-        // Configuration Mapping for Smart Logic Generation
         function populateAIClientSelect() {
             const select = document.getElementById('ai-client-select');
             select.innerHTML = '';
             if (state.clients.length === 0) {
-                select.innerHTML = `<option value="">No active profiles detected</option>`;
+                select.innerHTML = `<option value="">No targets registered</option>`;
                 return;
             }
             state.clients.forEach(c => {
@@ -562,7 +611,7 @@ Select a client and click "Run Engine" to instantly generate targeted assets, pl
             const outputBlock = document.getElementById('ai-output-display');
 
             if(!clientId) {
-                outputBlock.innerText = "Execution error: Aborted. Active Client identity context map required.";
+                outputBlock.innerText = "Execution failed: Active system execution requires an existing client token.";
                 return;
             }
 
@@ -582,7 +631,6 @@ IRONPULSE INTELLIGENT ROUTINE ENGINE: WORKOUT SPECIFICATION
 CLIENT OBJECT : ${client.name.toUpperCase()}
 TARGET PHASE  : ${phase.toUpperCase()}
 GENERATED LOG : ${generatedStamp}
-STATUS ID     : SYSTEM_DETERMINISTIC_FREE_TIER
 ----------------------------------------------------------------
 
 [BLOCK A: PRIMARY KINETIC DRIVE]
@@ -642,7 +690,7 @@ GENERATED LOG : ${generatedStamp}
 
 [HISTORICAL AUDIT EVALUATION]
 * Total Computed Volume Exerted: System registers consistent progression loops.
-* Compliance Rate: ${(history.length > 0) ? 'Optimal threshold maintained.' : 'Insufficient session documentation historical telemetry.'}
+* Compliance Rate: ${(history.length > 0) ? 'Optimal threshold maintained.' : 'Insufficient data tracking indicators.'}
 
 [DIAGNOSTIC ADAPTIVE RECOMMENDATIONS]
 1. BIOMECHANICAL SHIFT: Introduce a systematic de-load block if performance vectors hit a plateau over the next 3 scheduled sessions.
@@ -683,10 +731,9 @@ Thank you for your ongoing commitment to athletic excellence. Let's maximize the
 
         function copyEngineOutput() {
             const txt = document.getElementById('ai-output-display').innerText;
-            navigator.clipboard.writeText(txt).then(() => alert("System log contents written to system clipboard buffer successfully."));
+            navigator.clipboard.writeText(txt).then(() => alert("Copied output text to mobile clipboard buffer."));
         }
 
-        // Data Infrastructure Backups (Prevents Local Browser Clears)
         function exportData() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
             const dlAnchor = document.createElement('a');
@@ -710,13 +757,12 @@ Thank you for your ongoing commitment to athletic excellence. Let's maximize the
                         alert("Invalid database architecture schema formatting.");
                     }
                 } catch (err) {
-                    alert("Error parsing uploaded JSON data module file.");
+                    alert("Error parsing uploaded JSON data file module.");
                 }
             };
             reader.readAsText(event.target.files[0]);
         }
 
-        // Runtime Boot Configuration
         window.onload = function() {
             initStorage();
         };
