@@ -87,13 +87,17 @@
                     </div>
                     <div class="bg-zinc-800 p-2.5 rounded-xl text-emerald-400"><i data-lucide="user-check" class="w-5 h-5"></i></div>
                 </div>
-                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Last Payment Date</p>
-                        <h3 id="stat-last-payment-global" class="text-lg sm:text-xl font-bold mt-2 text-emerald-400 truncate max-w-[180px]">None</h3>
+                
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col h-[104px] sm:h-auto overflow-hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider">All Last Payments</p>
+                        <div class="bg-zinc-800 p-1.5 rounded-lg text-emerald-400"><i data-lucide="calendar-check" class="w-4 h-4"></i></div>
                     </div>
-                    <div class="bg-zinc-800 p-2.5 rounded-xl text-emerald-400"><i data-lucide="calendar-check" class="w-5 h-5"></i></div>
+                    <div id="stat-last-payment-global" class="overflow-y-auto custom-scrollbar flex-1 space-y-1.5 pr-1">
+                        <!-- Dynamic content -->
+                    </div>
                 </div>
+
                 <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Today's Sessions</p>
@@ -202,6 +206,16 @@
                         <input type="number" id="new-client-cycle" value="8" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
                     </div>
                 </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[11px] text-zinc-400 font-semibold">Last Payment Date</label>
+                        <input type="date" id="new-client-last-paid" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[11px] text-zinc-400 font-semibold">Tenure (Months)</label>
+                        <input type="number" id="new-client-tenure" value="0" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                </div>
                 <div class="space-y-1">
                     <label class="text-[11px] text-zinc-400 font-semibold">Identity Color Hex</label>
                     <input type="color" id="new-client-color" value="#10b981" class="w-full h-[44px] bg-zinc-950 border border-zinc-800 rounded-xl px-1 py-1 focus:outline-none text-white cursor-pointer">
@@ -236,6 +250,16 @@
                     <div class="space-y-1">
                         <label class="text-[11px] text-zinc-400 font-semibold">Session Cycle Target</label>
                         <input type="number" id="edit-client-cycle" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[11px] text-zinc-400 font-semibold">Last Payment Date</label>
+                        <input type="date" id="edit-client-last-paid" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[11px] text-zinc-400 font-semibold">Tenure (Months)</label>
+                        <input type="number" id="edit-client-tenure" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
                     </div>
                 </div>
                 <div class="space-y-1">
@@ -273,14 +297,6 @@
                         <label class="text-[11px] text-zinc-400 font-semibold">Target Time (24H)</label>
                         <input type="time" id="session-time" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
                     </div>
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[11px] text-zinc-400 font-semibold">Session Base Billable (RM) <span class="text-emerald-400 font-mono">(Auto-Calculated)</span></label>
-                    <input type="number" id="session-amount" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 text-white">
-                </div>
-                <div class="flex items-center space-x-3 bg-zinc-950 border border-zinc-800 p-3.5 rounded-xl">
-                    <input type="checkbox" id="session-paid-status" class="w-5 h-5 rounded text-emerald-500 focus:ring-emerald-500 bg-zinc-900 border-zinc-700 cursor-pointer shrink-0">
-                    <label for="session-paid-status" class="text-sm font-medium text-zinc-300 cursor-pointer select-none">Mark Invoice/Payment Received Immediately</label>
                 </div>
                 <div class="space-y-1">
                     <label class="text-[11px] text-zinc-400 font-semibold">Workout Structure & Exercise Arrays</label>
@@ -382,6 +398,8 @@
                 name: document.getElementById('new-client-name').value,
                 rate: parseFloat(document.getElementById('new-client-rate').value) || 0,
                 cycleTarget: parseInt(document.getElementById('new-client-cycle').value) || 8,
+                lastPaidDate: document.getElementById('new-client-last-paid').value,
+                tenureMonths: parseInt(document.getElementById('new-client-tenure').value) || 0,
                 color: document.getElementById('new-client-color').value,
                 notes: document.getElementById('new-client-notes').value,
                 timestamp: Date.now()
@@ -401,6 +419,8 @@
             document.getElementById('edit-client-name').value = client.name;
             document.getElementById('edit-client-rate').value = client.rate;
             document.getElementById('edit-client-cycle').value = client.cycleTarget || 8;
+            document.getElementById('edit-client-last-paid').value = client.lastPaidDate || '';
+            document.getElementById('edit-client-tenure').value = client.tenureMonths || 0;
             document.getElementById('edit-client-color').value = client.color || '#10b981';
             document.getElementById('edit-client-notes').value = client.notes || '';
 
@@ -416,6 +436,8 @@
                 state.clients[idx].name = document.getElementById('edit-client-name').value;
                 state.clients[idx].rate = parseFloat(document.getElementById('edit-client-rate').value) || 0;
                 state.clients[idx].cycleTarget = parseInt(document.getElementById('edit-client-cycle').value) || 8;
+                state.clients[idx].lastPaidDate = document.getElementById('edit-client-last-paid').value;
+                state.clients[idx].tenureMonths = parseInt(document.getElementById('edit-client-tenure').value) || 0;
                 state.clients[idx].color = document.getElementById('edit-client-color').value;
                 state.clients[idx].notes = document.getElementById('edit-client-notes').value;
                 
@@ -432,12 +454,9 @@
             }
         }
 
-        function openAddSessionModal(clientId, clientName, clientRate) {
+        function openAddSessionModal(clientId, clientName) {
             document.getElementById('session-client-id').value = clientId;
             document.getElementById('session-client-name-display').value = clientName;
-            
-            // Automatic parameter matching assignment logic
-            document.getElementById('session-amount').value = clientRate;
             
             const now = new Date();
             document.getElementById('session-date').value = now.toISOString().split('T')[0];
@@ -453,22 +472,12 @@
                 clientId: document.getElementById('session-client-id').value,
                 date: document.getElementById('session-date').value,
                 time: document.getElementById('session-time').value,
-                amount: parseFloat(document.getElementById('session-amount').value) || 0,
-                paid: document.getElementById('session-paid-status').checked,
                 workout: document.getElementById('session-workout').value
             };
             state.sessions.push(newSession);
             commitToStorage();
             document.getElementById('add-session-form').reset();
             toggleModal('add-session-modal', false);
-        }
-
-        function toggleSessionPayment(sessionId) {
-            const idx = state.sessions.findIndex(s => s.id === sessionId);
-            if(idx !== -1) {
-                state.sessions[idx].paid = !state.sessions[idx].paid;
-                commitToStorage();
-            }
         }
 
         function purgeSession(sessionId, event) {
@@ -491,22 +500,10 @@
 
             state.clients.forEach(client => {
                 const clientSessions = state.sessions.filter(s => s.clientId === client.id);
-                const paidSessions = clientSessions.filter(s => s.paid).sort((a,b) => b.date.localeCompare(a.date));
                 
-                // Track Last Paid Date logic
-                const lastPaymentDate = paidSessions.length > 0 ? paidSessions[0].date : "None Rec.";
-                
-                // Active Client Tenure Calculation Engines
-                const startTimestamp = client.timestamp || Date.now();
-                const diffTime = Math.abs(Date.now() - startTimestamp);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const monthsCount = Math.floor(diffDays / 30.4);
-                const tenureString = monthsCount < 1 ? "< 1 month active" : `${monthsCount} months active`;
-
                 const cycleTarget = client.cycleTarget || 8;
-                const currentCycle = paidSessions.length % cycleTarget;
+                const currentCycle = clientSessions.length % cycleTarget;
                 
-                // Build Workout History Matrix Array Lists
                 let historyMarkup = '';
                 const sortedHistory = [...clientSessions].sort((a,b) => b.date.localeCompare(a.date));
                 if(sortedHistory.length === 0) {
@@ -553,11 +550,11 @@
                             </div>
                             <div class="bg-zinc-950 p-2 border border-zinc-800/60 rounded-lg flex flex-col justify-center">
                                 <span class="block text-zinc-500 font-medium">Last Paid</span>
-                                <span class="text-[11px] font-mono font-bold text-zinc-300 mt-0.5 truncate">${lastPaymentDate}</span>
+                                <span class="text-[11px] font-mono font-bold text-zinc-300 mt-0.5 truncate">${client.lastPaidDate || 'None'}</span>
                             </div>
                             <div class="bg-zinc-950 p-2 border border-zinc-800/60 rounded-lg flex flex-col justify-center">
                                 <span class="block text-zinc-500 font-medium">Tenure</span>
-                                <span class="text-[11px] font-bold text-sky-400 mt-0.5 truncate">${monthsCount} Mo</span>
+                                <span class="text-[11px] font-bold text-sky-400 mt-0.5 truncate">${client.tenureMonths || 0} Mo</span>
                             </div>
                         </div>
                         <div class="space-y-1.5">
@@ -567,7 +564,7 @@
                             </div>
                         </div>
                     </div>
-                    <button onclick="openAddSessionModal('${client.id}', '${client.name}', ${client.rate})" class="w-full bg-zinc-800 text-zinc-300 font-semibold py-3 rounded-xl text-xs flex items-center justify-center gap-1.5 active:bg-emerald-500 active:text-zinc-950 transition mt-2 shrink-0"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Session Blueprint</button>
+                    <button onclick="openAddSessionModal('${client.id}', '${client.name}')" class="w-full bg-zinc-800 text-zinc-300 font-semibold py-3 rounded-xl text-xs flex items-center justify-center gap-1.5 active:bg-emerald-500 active:text-zinc-950 transition mt-2 shrink-0"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Session Blueprint</button>
                 `;
                 grid.appendChild(card);
             });
@@ -576,16 +573,27 @@
         function renderDashboard() {
             document.getElementById('stat-active-clients').innerText = state.clients.length;
             
-            // Global Last Payment Computation logic
-            const paidGlobalSessions = state.sessions.filter(s => s.paid).sort((a,b) => b.date.localeCompare(a.date));
-            const globalLastPaidText = paidGlobalSessions.length > 0 ? paidGlobalSessions[0].date : "None Tracked";
-            document.getElementById('stat-last-payment-global').innerText = globalLastPaidText;
+            // Render All Clients Last Payment Dates
+            const paymentsContainer = document.getElementById('stat-last-payment-global');
+            paymentsContainer.innerHTML = '';
+            
+            if(state.clients.length === 0) {
+                paymentsContainer.innerHTML = '<div class="text-zinc-500 font-mono text-xs mt-1">No active clients</div>';
+            } else {
+                state.clients.forEach(c => {
+                    paymentsContainer.innerHTML += `
+                        <div class="flex justify-between items-center py-1 border-b border-zinc-800/50 last:border-0">
+                            <span class="text-zinc-300 font-medium truncate pr-2">${c.name}</span>
+                            <span class="text-emerald-400 font-mono shrink-0">${c.lastPaidDate || 'Pending'}</span>
+                        </div>
+                    `;
+                });
+            }
 
             const todayStr = new Date().toISOString().split('T')[0];
             const todaySessions = state.sessions.filter(s => s.date === todayStr);
             document.getElementById('stat-sessions-today').innerText = todaySessions.length;
 
-            // Render Dynamic "Today's Workout Focus" Block Panels
             const workoutFocusContainer = document.getElementById('dashboard-workout-focus-list');
             workoutFocusContainer.innerHTML = '';
             
